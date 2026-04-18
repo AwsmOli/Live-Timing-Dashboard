@@ -2,7 +2,7 @@ import { readonly, ref } from "vue";
 import type { ConnectionStatus, DataSource, RaceData } from "../models";
 
 const WS_URL = "wss://livetiming.azurewebsites.net/";
-const DEFAULT_EVENT_ID = import.meta.env.DEV ? "50" : "20";
+const DEFAULT_EVENT_ID = "50";
 const INITIAL_PID = [0];
 const RECONNECT_BASE = 1000;
 const RECONNECT_MAX = 30000;

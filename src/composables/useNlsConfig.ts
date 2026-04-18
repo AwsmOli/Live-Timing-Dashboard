@@ -1,6 +1,10 @@
 import { readonly, ref } from "vue";
 
-const NLS_LIVE_URL = "/api/nls-live";
+const NLS_ORIGIN = "https://www.nuerburgring-langstrecken-serie.de/language/en/live/";
+// In dev, use Vite proxy to avoid CORS; in production, use corsproxy.io
+const NLS_LIVE_URL = import.meta.env.DEV
+  ? "/api/nls-live"
+  : `https://corsproxy.io/?url=${encodeURIComponent(NLS_ORIGIN)}`;
 
 export interface StreamInfo {
   label: string; // "Livestream" or "#3", "#44" etc.
