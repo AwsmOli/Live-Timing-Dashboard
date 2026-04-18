@@ -37,27 +37,42 @@
 
   //- Leaderboard + optional stream + optional ticker
   template(v-else)
-    //- Stream active: side-by-side on lg+, stacked on mobile
-    .flex-1.flex.min-h-0(v-if="showStream" class="flex-col lg:flex-row")
+    .flex-1.flex.min-h-0(class="flex-col lg:flex-row")
       //- Stream panel
-      .border-b.border-gray-800(class="h-[50vh] lg:h-auto lg:flex-1 lg:border-b-0 lg:border-r")
+      .border-b.border-gray-800(
+        v-if="showStream"
+        class="h-[50vh] lg:h-auto lg:flex-1 lg:border-b-0 lg:border-r"
+      )
         LiveStream
-      //- Leaderboard panel (mobile layout forced)
-      .flex-1.overflow-y-auto.min-h-0(class="lg:w-96 lg:flex-none")
+
+      //- Right column: leaderboard + ticker stacked when stream is active
+      .flex.min-h-0(
+        v-if="showStream && showTicker"
+        class="flex-col lg:w-96 lg:flex-none"
+      )
+        .flex-1.overflow-y-auto.min-h-0
+          ClassFilter
+          LeaderboardTable(:compact="true")
+        .border-t.border-gray-800(class="h-[40vh] lg:h-[40%] lg:flex-none")
+          EventLog
+
+      //- Leaderboard only (stream on, no ticker)
+      .flex-1.overflow-y-auto.min-h-0(
+        v-else-if="showStream"
+        class="lg:w-96 lg:flex-none"
+      )
         ClassFilter
         LeaderboardTable(:compact="true")
 
-    //- No stream: leaderboard + optional ticker side panel
-    .flex-1.flex.min-h-0(v-else class="flex-col lg:flex-row")
-      //- Leaderboard
-      .flex-1.overflow-y-auto.min-h-0
-        LeaderboardTable
-      //- Ticker side panel
-      .border-t.border-gray-800(
-        v-if="showTicker"
-        class="h-[40vh] lg:h-auto lg:w-80 lg:flex-none lg:border-t-0 lg:border-l"
-      )
-        EventLog
+      //- No stream: leaderboard fills, optional ticker side panel
+      template(v-else)
+        .flex-1.overflow-y-auto.min-h-0
+          LeaderboardTable
+        .border-t.border-gray-800(
+          v-if="showTicker"
+          class="h-[40vh] lg:h-auto lg:w-80 lg:flex-none lg:border-t-0 lg:border-l"
+        )
+          EventLog
 
   DriverDetail
 </template>
