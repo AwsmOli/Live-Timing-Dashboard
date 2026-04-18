@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-racing-green: #00c853;
+  --color-racing-red: #ff1744;
+  --color-racing-purple: #aa00ff;
+  --color-racing-yellow: #ffd600;
+  --color-racing-blue: #2979ff;
+
+  --color-surface-0: #0a0a0f;
+  --color-surface-1: #111118;
+  --color-surface-2: #1a1a24;
+  --color-surface-3: #22222e;
+}
+
+/* TransitionGroup move animation */
+.driver-list-move {
+  transition: transform 0.6s ease;
+}
+.driver-list-enter-active,
+.driver-list-leave-active {
+  transition: all 0.4s ease;
+}
+.driver-list-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+.driver-list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+.driver-list-leave-active {
+  position: absolute;
+}
+
+/* Detail panel slide */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+/* Sticky tracked row - cells must be sticky since tr sticky doesn't work */
+.tracked-sticky > td {
+  position: sticky;
+  top: 2.25rem; /* below thead */
+  z-index: 5;
+  background: color-mix(in srgb, var(--color-racing-blue) 25%, var(--color-surface-0));
+}
+
+/* Sticky tracked card on mobile */
+.tracked-card-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: color-mix(in srgb, var(--color-racing-blue) 25%, var(--color-surface-0));
+}
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* Backdrop fade */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Position change flash — uses pseudo-element so it doesn't override row bg */
+@keyframes flash-green {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes flash-red {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.flash-gain,
+.flash-loss {
+  position: relative;
+}
+.flash-gain::after,
+.flash-loss::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.flash-gain::after {
+  background-color: rgba(0, 200, 83, 0.3);
+  animation: flash-green 3s ease-out;
+}
+.flash-loss::after {
+  background-color: rgba(255, 23, 68, 0.3);
+  animation: flash-red 3s ease-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-1);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
