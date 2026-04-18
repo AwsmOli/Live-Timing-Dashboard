@@ -23,13 +23,19 @@
     )
       MonitorPlay(:size="14")
       span.hidden(class="sm:inline") Watch Stream
+    button.text-xs.font-medium.rounded.px-3.py-1.transition-colors.flex.items-center.gap-1(
+      :class="showTicker ? 'bg-racing-blue text-white' : 'bg-surface-2 text-gray-400 hover:text-white'"
+      @click="showTicker = !showTicker"
+    )
+      Newspaper(:size="14")
+      span.hidden(class="sm:inline") Live Ticker
   ClassFilter(v-if="!showStream || activeTab !== 'leaderboard'")
 
   //- Lap chart (no stream overlay)
   .flex-1.overflow-hidden(v-if="activeTab === 'lapchart'")
     LapChart
 
-  //- Leaderboard + optional stream
+  //- Leaderboard + optional stream + optional ticker
   template(v-else)
     //- Stream active: side-by-side on lg+, stacked on mobile
     .flex-1.flex.min-h-0(v-if="showStream" class="flex-col lg:flex-row")
@@ -41,9 +47,17 @@
         ClassFilter
         LeaderboardTable(:compact="true")
 
-    //- No stream: normal leaderboard
-    .flex-1.overflow-y-auto(v-else)
-      LeaderboardTable
+    //- No stream: leaderboard + optional ticker side panel
+    .flex-1.flex.min-h-0(v-else class="flex-col lg:flex-row")
+      //- Leaderboard
+      .flex-1.overflow-y-auto.min-h-0
+        LeaderboardTable
+      //- Ticker side panel
+      .border-t.border-gray-800(
+        v-if="showTicker"
+        class="h-[40vh] lg:h-auto lg:w-80 lg:flex-none lg:border-t-0 lg:border-l"
+      )
+        EventLog
 
   DriverDetail
 </template>
@@ -56,7 +70,7 @@ import { useRaceState } from './composables/useRaceState';
 import { useWebSocket, setEventId } from './composables/useWebSocket';
 import { fetchNlsConfig, useNlsConfig } from './composables/useNlsConfig';
 import type { RaceData } from './models';
-import { ListOrdered, ChartLine, MonitorPlay } from 'lucide-vue-next';
+import { ListOrdered, ChartLine, MonitorPlay, Newspaper } from 'lucide-vue-next';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import RaceHeader from './components/RaceHeader.vue';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -69,9 +83,13 @@ import DriverDetail from './components/DriverDetail.vue';
 import LapChart from './components/LapChart.vue';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import LiveStream from './components/LiveStream.vue';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import EventLog from './components/EventLog.vue';
+import { startTickerPolling, stopTickerPolling } from './composables/useEventLog';
 
 const activeTab = ref<'leaderboard' | 'lapchart'>('leaderboard');
 const showStream = ref(false);
+const showTicker = ref(false);
 
 const { processRaceData, drivers } = useRaceState();
 const { config: nlsConfig } = useNlsConfig();
@@ -104,11 +122,15 @@ onMounted(async () => {
     }
   }
 
+  // Start live ticker polling
+  startTickerPolling();
+
   dataSource.connect();
   watchEffect(() => {
     connectionStatus.value = dataSource.connectionStatus.value;
   });
   onUnmounted(() => {
+    stopTickerPolling();
     dataSource.destroy();
   });
 });

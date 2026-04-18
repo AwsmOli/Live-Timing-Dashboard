@@ -13,6 +13,10 @@
         | {{ stream.carNumber }}
         span.ml-1.text-gray-500(v-if="getCarName(stream.carNumber)") {{ getCarName(stream.carNumber) }}
       span(v-else) {{ stream.label }}
+    .flex-1
+    button.text-xs.font-medium.rounded.px-2.py-1.transition-colors.hidden(class="lg:flex" :class="showChat ? 'bg-racing-blue text-white' : 'bg-surface-2 text-gray-400 hover:text-white'" @click="showChat = !showChat")
+      MessageSquare(:size="14")
+      span.ml-1 Chat
 
   //- Player area
   .flex.flex-1.min-h-0(v-if="activeStream")
@@ -25,7 +29,7 @@
         frameborder="0"
       )
     //- YouTube live chat
-    .w-80.border-l.border-gray-800.hidden(class="lg:block")
+    .w-80.border-l.border-gray-800.hidden(v-if="showChat" class="lg:block")
       iframe.w-full.h-full(
         :src="chatUrl"
         frameborder="0"
@@ -44,13 +48,14 @@ import { computed, ref, watch } from 'vue';
 import type { StreamInfo } from '../composables/useNlsConfig';
 import { useNlsConfig } from '../composables/useNlsConfig';
 import { useRaceState } from '../composables/useRaceState';
-import { MonitorOff } from 'lucide-vue-next';
+import { MonitorOff, MessageSquare } from 'lucide-vue-next';
 
 const { config } = useNlsConfig();
 const { drivers, trackedDriver } = useRaceState();
 
 const streams = computed(() => config.value?.streams ?? [] as readonly StreamInfo[]);
 const activeStreamId = ref<string | null>(null);
+const showChat = ref(true);
 
 // Auto-select the main stream on load
 watch(streams, (s) => {

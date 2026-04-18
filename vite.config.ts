@@ -19,6 +19,11 @@ export default defineConfig({
         rewrite: () => "/language/de/live/",
         followRedirects: false,
       },
+      "/api/nls-ticker": {
+        target: "https://www.nuerburgring-langstrecken-serie.de",
+        changeOrigin: true,
+        rewrite: () => "/wp-content/themes/pofo-child/liveticker.php",
+      },
     },
   },
 });
