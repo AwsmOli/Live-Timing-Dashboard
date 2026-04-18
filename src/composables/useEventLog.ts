@@ -46,8 +46,7 @@ async function fetchTicker(): Promise<void> {
     const html = await res.text();
     const parsed = parseTickerHtml(html);
     if (parsed.length > 0) {
-      // Reverse so newest entries are first
-      entries.value = parsed.reverse();
+      entries.value = parsed;
       error.value = null;
     }
   } catch (e) {
