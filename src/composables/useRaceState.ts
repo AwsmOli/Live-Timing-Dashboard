@@ -20,11 +20,13 @@ const raceInfo: RaceInfo = reactive({
 const drivers: Map<string, DriverInternal> = reactive(new Map());
 const selectedClasses: Ref<Set<string>> = ref(new Set());
 const selectedDriver: Ref<string | null> = ref(null);
-const trackedDriver: Ref<string | null> = ref(localStorage.getItem('nls-trackedDriver'));
+const trackedDriver: Ref<string | null> = ref(
+  localStorage.getItem("nls-trackedDriver"),
+);
 
 watch(trackedDriver, (v) => {
-  if (v) localStorage.setItem('nls-trackedDriver', v);
-  else localStorage.removeItem('nls-trackedDriver');
+  if (v) localStorage.setItem("nls-trackedDriver", v);
+  else localStorage.removeItem("nls-trackedDriver");
 });
 
 const sortedDrivers: ComputedRef<DriverInternal[]> = computed(() => {
