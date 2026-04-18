@@ -1,5 +1,5 @@
 import type { ComputedRef, Ref } from "vue";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import type { Driver, DriverInternal, RaceData, RaceInfo } from "../models";
 import { CLASS_ORDER } from "../utils/classColors";
 
@@ -20,7 +20,12 @@ const raceInfo: RaceInfo = reactive({
 const drivers: Map<string, DriverInternal> = reactive(new Map());
 const selectedClasses: Ref<Set<string>> = ref(new Set());
 const selectedDriver: Ref<string | null> = ref(null);
-const trackedDriver: Ref<string | null> = ref(null);
+const trackedDriver: Ref<string | null> = ref(localStorage.getItem('nls-trackedDriver'));
+
+watch(trackedDriver, (v) => {
+  if (v) localStorage.setItem('nls-trackedDriver', v);
+  else localStorage.removeItem('nls-trackedDriver');
+});
 
 const sortedDrivers: ComputedRef<DriverInternal[]> = computed(() => {
   const arr = Array.from(drivers.values());

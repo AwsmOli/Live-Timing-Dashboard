@@ -54,8 +54,8 @@ const { config } = useNlsConfig();
 const { drivers, trackedDriver } = useRaceState();
 
 const streams = computed(() => config.value?.streams ?? [] as readonly StreamInfo[]);
-const activeStreamId = ref<string | null>(null);
-const showChat = ref(true);
+const activeStreamId = ref<string | null>(localStorage.getItem('nls-activeStream'));
+const showChat = ref(localStorage.getItem('nls-showChat') !== 'false');
 
 // Auto-select the main stream on load
 watch(streams, (s) => {
@@ -63,6 +63,9 @@ watch(streams, (s) => {
     activeStreamId.value = s[0].videoId;
   }
 }, { immediate: true });
+
+watch(activeStreamId, (v) => { if (v) localStorage.setItem('nls-activeStream', v); });
+watch(showChat, (v) => localStorage.setItem('nls-showChat', String(v)));
 
 // If a tracked driver has a stream, switch to it
 watch(trackedDriver, (stnr) => {
