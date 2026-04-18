@@ -22,7 +22,7 @@
       @click="showStream = !showStream"
     )
       MonitorPlay(:size="14")
-      span.hidden(class="sm:inline") Stream
+      span.hidden(class="sm:inline") Watch Stream
   ClassFilter(v-if="!showStream || activeTab !== 'leaderboard'")
 
   //- Lap chart (no stream overlay)

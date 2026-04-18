@@ -7,10 +7,16 @@ export default defineConfig({
   plugins: [vue(), tailwindcss()],
   server: {
     proxy: {
-      "/api/nls-live": {
+      "/api/nls-live-en": {
         target: "https://www.nuerburgring-langstrecken-serie.de",
         changeOrigin: true,
-        rewrite: (path) => "/language/en/live/",
+        rewrite: () => "/language/en/live/",
+        followRedirects: false,
+      },
+      "/api/nls-live-de": {
+        target: "https://www.nuerburgring-langstrecken-serie.de",
+        changeOrigin: true,
+        rewrite: () => "/language/de/live/",
         followRedirects: false,
       },
     },
