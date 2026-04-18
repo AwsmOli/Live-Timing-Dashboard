@@ -46,6 +46,7 @@
 .tracked-sticky > td {
   position: sticky;
   top: 2.25rem; /* below thead */
+  bottom: 0;
   z-index: 5;
   background: color-mix(in srgb, var(--color-racing-blue) 25%, var(--color-surface-0));
 }
@@ -54,6 +55,7 @@
 .tracked-card-sticky {
   position: sticky;
   top: 0;
+  bottom: 0;
   z-index: 5;
   background: color-mix(in srgb, var(--color-racing-blue) 25%, var(--color-surface-0));
 }

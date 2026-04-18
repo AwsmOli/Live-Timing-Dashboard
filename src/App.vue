@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { processLapHistoryUpdate } from './composables/useLapHistory';
 import { useMockData } from './composables/useMockData';
 import { useRaceState } from './composables/useRaceState';
@@ -102,9 +102,15 @@ import LiveStream from './components/LiveStream.vue';
 import EventLog from './components/EventLog.vue';
 import { startTickerPolling, stopTickerPolling } from './composables/useEventLog';
 
-const activeTab = ref<'leaderboard' | 'lapchart'>('leaderboard');
-const showStream = ref(false);
-const showTicker = ref(false);
+const activeTab = ref<'leaderboard' | 'lapchart'>(
+  (localStorage.getItem('nls-activeTab') as 'leaderboard' | 'lapchart') || 'leaderboard'
+);
+const showStream = ref(localStorage.getItem('nls-showStream') === 'true');
+const showTicker = ref(localStorage.getItem('nls-showTicker') === 'true');
+
+watch(activeTab, (v) => localStorage.setItem('nls-activeTab', v));
+watch(showStream, (v) => localStorage.setItem('nls-showStream', String(v)));
+watch(showTicker, (v) => localStorage.setItem('nls-showTicker', String(v)));
 
 const { processRaceData, drivers } = useRaceState();
 const { config: nlsConfig } = useNlsConfig();
