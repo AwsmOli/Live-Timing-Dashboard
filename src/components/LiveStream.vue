@@ -38,7 +38,8 @@
   //- Empty state
   .flex.items-center.justify-center.flex-1.text-gray-500(v-else)
     .text-center
-      MonitorOff(:size="48" class="mx-auto mb-3 text-gray-600")
+      .inline-block.ui-tooltip-anchor(data-tooltip="No streams available")
+        MonitorOff(:size="48" class="mx-auto mb-3 text-gray-600")
       p.text-lg No streams available
       p.text-sm.mt-1 Streams will appear once the NLS live page is configured
 </template>

@@ -28,10 +28,51 @@ const CLASS_COLORS: Record<string, ClassColor> = {
   V3: { bg: "bg-rose-400", text: "text-white" },
 };
 
-const DEFAULT_COLOR: ClassColor = { bg: "bg-gray-500", text: "text-white" };
+const FALLBACK_COLORS: ClassColor[] = [
+  { bg: "bg-sky-500", text: "text-white" },
+  { bg: "bg-emerald-500", text: "text-white" },
+  { bg: "bg-amber-500", text: "text-black" },
+  { bg: "bg-violet-500", text: "text-white" },
+  { bg: "bg-rose-500", text: "text-white" },
+  { bg: "bg-cyan-600", text: "text-white" },
+  { bg: "bg-lime-600", text: "text-white" },
+  { bg: "bg-fuchsia-500", text: "text-white" },
+  { bg: "bg-teal-600", text: "text-white" },
+  { bg: "bg-orange-600", text: "text-white" },
+  { bg: "bg-indigo-500", text: "text-white" },
+  { bg: "bg-pink-500", text: "text-white" },
+];
+
+function normalizeClassName(className: string): string {
+  return className
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+const NORMALIZED_CLASS_COLORS = Object.fromEntries(
+  Object.entries(CLASS_COLORS).map(([className, color]) => [
+    normalizeClassName(className),
+    color,
+  ]),
+);
+
+function hashClassName(className: string): number {
+  let hash = 0;
+  for (const character of className) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+  return hash;
+}
 
 export function getClassColor(className: string): ClassColor {
-  return CLASS_COLORS[className] || DEFAULT_COLOR;
+  const normalizedClassName = normalizeClassName(className);
+  const knownColor = NORMALIZED_CLASS_COLORS[normalizedClassName];
+  if (knownColor) return knownColor;
+
+  return FALLBACK_COLORS[
+    hashClassName(normalizedClassName) % FALLBACK_COLORS.length
+  ];
 }
 
 export const CLASS_ORDER: string[] = [

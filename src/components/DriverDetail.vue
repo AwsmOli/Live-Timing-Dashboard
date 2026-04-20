@@ -25,19 +25,19 @@ Transition(name="slide")
           span.text-gray-600 •
           span {{ driver.CAR }}
         .flex.items-center.gap-4.mt-2
-          .flex.items-center.gap-1(title="Overall position")
+          .flex.items-center.gap-1.ui-tooltip-anchor(data-tooltip="Overall position")
             Trophy(:size="12" class="text-gray-500")
             span.font-mono.font-bold.text-white P{{ driver.POSITION }}
-          .flex.items-center.gap-1(title="Class position")
+          .flex.items-center.gap-1.ui-tooltip-anchor(data-tooltip="Class position")
             Flag(:size="12" class="text-gray-500")
             span.font-mono.font-bold.text-white P{{ driver.CLASSRANK }}
-          .flex.items-center.gap-1(title="Completed laps")
+          .flex.items-center.gap-1.ui-tooltip-anchor(data-tooltip="Completed laps")
             RotateCw(:size="12" class="text-gray-500")
             span.font-mono.text-white {{ driver.LAPS }}
-          .flex.items-center.gap-1(title="Pit stops")
+          .flex.items-center.gap-1.ui-tooltip-anchor(data-tooltip="Pit stops")
             WrenchIcon(:size="12" class="text-gray-500")
             span.font-mono.text-white {{ driver.PITSTOPCOUNT }}
-          .flex.items-center.gap-1(v-if="driver.TPST" title="Total pit stop time")
+          .flex.items-center.gap-1.ui-tooltip-anchor(v-if="driver.TPST" data-tooltip="Total pit stop time")
             Timer(:size="12" class="text-gray-500")
             span.font-mono.text-white {{ driver.TPST }}
       button.text-gray-400.p-1.rounded.transition-colors(
@@ -50,7 +50,7 @@ Transition(name="slide")
 
     //- Driver stints bar
     .px-4.py-3.border-b.border-gray-800(v-if="driversSeen.length > 1")
-      .text-xs.text-gray-500.mb-1.uppercase.font-semibold.flex.items-center.gap-1
+      .text-xs.text-gray-500.mb-1.uppercase.font-semibold.flex.items-center.gap-1.ui-tooltip-anchor(data-tooltip="Driver stints")
         Users(:size="12")
         | Driver Stints
       .flex.h-6.rounded.overflow-hidden.bg-surface-0
@@ -117,8 +117,10 @@ Transition(name="slide")
               td.px-2.py-1.font-mono.text-xs.text-center.text-gray-300 {{ lap.position }}
               td.px-2.py-1.font-mono.text-xs.text-center.text-gray-400 {{ lap.classPosition }}
               td.px-2.py-1.text-center
-                WrenchIcon(v-if="lap.isPitIn" :size="12" class="text-gray-400 inline" title="Pit stop")
-                ArrowRightLeft(v-if="isDriverChangeLap(lap.lapNumber)" :size="12" class="text-gray-400 inline ml-1" title="Driver change")
+                span.inline-block.ui-tooltip-anchor(v-if="lap.isPitIn" data-tooltip="Pit stop")
+                  WrenchIcon(:size="12" class="text-gray-400 inline")
+                span.inline-block.ml-1.ui-tooltip-anchor(v-if="isDriverChangeLap(lap.lapNumber)" data-tooltip="Driver change")
+                  ArrowRightLeft(:size="12" class="text-gray-400 inline")
 
       //- Pit stops tab
       div(v-if="activeTab === 'pits'")
@@ -149,7 +151,7 @@ Transition(name="slide")
             v-for="(change, idx) in driverChanges"
             :key="idx"
           )
-            .w-8.h-8.rounded-full.bg-surface-3.flex.items-center.justify-center
+            .w-8.h-8.rounded-full.bg-surface-3.flex.items-center.justify-center.ui-tooltip-anchor(data-tooltip="Driver change")
               ArrowRightLeft(:size="16" class="text-gray-300")
             div
               .text-sm.text-white

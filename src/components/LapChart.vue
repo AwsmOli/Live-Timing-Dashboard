@@ -17,7 +17,7 @@
     )
       option(value="overall") Overall Position
       option(value="class") Class Position
-    .text-xs.text-gray-500.ml-auto.flex.items-center.gap-1(v-if="trackedDriver")
+    .text-xs.text-gray-500.ml-auto.flex.items-center.gap-1.ui-tooltip-anchor(v-if="trackedDriver" data-tooltip="Tracked car")
       Crosshair(:size="12")
       | #{{ trackedDriver }}
 

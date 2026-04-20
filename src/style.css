@@ -42,21 +42,23 @@
   transition: transform 0.35s ease, opacity 0.35s ease;
 }
 
-/* Sticky tracked row - cells must be sticky since tr sticky doesn't work */
-.tracked-sticky > td {
+/* Tracked item highlight */
+.tracked-sticky {
   position: sticky;
-  top: 2.25rem; /* below thead */
+  top: calc(2rem + 1px); /* matches thead: py-2 (1rem) + text-xs line-height (1rem) + border-b (1px) */
   bottom: 0;
   z-index: 5;
+}
+
+.tracked-sticky > td {
   background: color-mix(in srgb, var(--color-racing-blue) 25%, var(--color-surface-0));
 }
 
-/* Sticky tracked card on mobile */
 .tracked-card-sticky {
   position: sticky;
   top: 0;
   bottom: 0;
-  z-index: 5;
+  z-index: 20;
   background: color-mix(in srgb, var(--color-racing-blue) 25%, var(--color-surface-0));
 }
 .slide-enter-from,
@@ -99,10 +101,12 @@
 .flash-gain::after {
   background-color: rgba(0, 200, 83, 0.3);
   animation: flash-green 3s ease-out;
+  clip-path: inset(0 round 0.75rem);
 }
 .flash-loss::after {
   background-color: rgba(255, 23, 68, 0.3);
   animation: flash-red 3s ease-out;
+  clip-path: inset(0 round 0.75rem);
 }
 
 /* Scrollbar styling */
@@ -119,4 +123,74 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #444;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@media (hover: hover) {
+  .ui-tooltip-anchor {
+    position: relative;
+  }
+
+  .ui-tooltip-anchor::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%) translateY(4px);
+    background: rgba(10, 10, 15, 0.96);
+    color: #f3f4f6;
+    border: 1px solid rgba(75, 85, 99, 0.7);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 40;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .ui-tooltip-anchor::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 2px);
+    transform: translateX(-50%) translateY(4px);
+    border-width: 6px 5px 0 5px;
+    border-style: solid;
+    border-color: rgba(10, 10, 15, 0.96) transparent transparent transparent;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 39;
+  }
+
+  .ui-tooltip-anchor:hover::after,
+  .ui-tooltip-anchor:hover::before,
+  .ui-tooltip-anchor:focus-visible::after,
+  .ui-tooltip-anchor:focus-visible::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .ui-tooltip-below::after {
+    bottom: auto;
+    top: calc(100% + 8px);
+  }
+
+  .ui-tooltip-below::before {
+    bottom: auto;
+    top: calc(100% + 2px);
+    border-width: 0 5px 6px 5px;
+    border-color: transparent transparent rgba(10, 10, 15, 0.96) transparent;
+  }
 }

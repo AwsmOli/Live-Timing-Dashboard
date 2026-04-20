@@ -1,5 +1,5 @@
 <template lang="pug">
-.h-screen.flex.flex-col.bg-surface-0.text-gray-100.font-sans
+.h-screen.flex.flex-col.overflow-hidden.bg-surface-0.text-gray-100.font-sans
   RaceHeader(
     :connectionStatus="connectionStatus"
     :activeMedia="activeMedia"
@@ -22,13 +22,13 @@
       v-if="hasMediaPanel && showTicker"
       class="flex-col lg:w-96 lg:flex-none"
     )
-      .flex-1.overflow-y-auto.min-h-0
+      .flex-1.flex.flex-col.min-h-0
         ClassFilter
         LeaderboardTable(:compact="true")
       .border-t.border-gray-800(class="h-[40vh] lg:h-[40%] lg:flex-none")
         EventLog
 
-    .flex-1.overflow-y-auto.min-h-0(
+    .flex-1.flex.flex-col.min-h-0(
       v-else-if="hasMediaPanel"
       class="lg:w-96 lg:flex-none"
     )
@@ -36,7 +36,7 @@
       LeaderboardTable(:compact="true")
 
     template(v-else)
-      .flex-1.overflow-y-auto.min-h-0
+      .flex-1.flex.flex-col.min-h-0
         LeaderboardTable
       .border-t.border-gray-800(
         v-if="showTicker"

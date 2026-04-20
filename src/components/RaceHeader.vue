@@ -26,23 +26,23 @@ header.bg-surface-1.border-b.border-gray-800.px-4.py-3.flex.items-center.justify
       Newspaper(:size="14")
       span.hidden(class="sm:inline") Live Ticker
     //- Elapsed / Remaining time
-    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="elapsedDisplay" title="Elapsed race time")
+    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1.ui-tooltip-anchor.ui-tooltip-below(v-if="elapsedDisplay" data-tooltip="Elapsed race time")
       Clock(:size="12" class="text-gray-500")
       span {{ elapsedDisplay }}
-    .text-xs.font-mono.flex.items-center.gap-1(v-if="remainingDisplay" :class="remainingUrgent ? 'text-racing-red' : 'text-gray-300'" title="Estimated remaining race time")
+    .text-xs.font-mono.flex.items-center.gap-1.ui-tooltip-anchor.ui-tooltip-below(v-if="remainingDisplay" :class="remainingUrgent ? 'text-racing-red' : 'text-gray-300'" data-tooltip="Estimated remaining race time")
       Hourglass(:size="12" class="text-gray-500")
       span {{ remainingDisplay }}
     //- Leader lap
-    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="leaderLaps" title="Leader lap count")
+    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1.ui-tooltip-anchor.ui-tooltip-below(v-if="leaderLaps" data-tooltip="Leader lap count")
       RotateCw(:size="12" class="text-gray-500")
       span {{ leaderLaps }}
 
     //- Car count
-    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="carCount > 0" title="Cars in classification")
+    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1.ui-tooltip-anchor.ui-tooltip-below(v-if="carCount > 0" data-tooltip="Cars in classification")
       CarIcon(:size="12" class="text-gray-500")
       span {{ carCount }}
     //- Connection status
-    .flex.items-center(class="gap-1.5" :title="statusTooltip")
+    .flex.items-center.ui-tooltip-anchor.ui-tooltip-below(class="gap-1.5" :data-tooltip="statusTooltip")
       Wifi(v-if="connectionStatusValue === 'connected'" :size="12" class="text-racing-green")
       RefreshCw(v-else-if="connectionStatusValue === 'reconnecting'" :size="12" class="text-yellow-400 animate-spin")
       WifiOff(v-else :size="12" class="text-racing-red")

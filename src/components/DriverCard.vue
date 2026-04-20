@@ -1,74 +1,147 @@
 <template lang="pug">
-.rounded-xl.border.border-gray-800.cursor-pointer.transition-colors.overflow-hidden(
+.rounded-xl.border.border-gray-800.cursor-pointer.transition-colors(
+  :data-driver-id="driver.STNR"
+  :data-driver-pinned="isPinned ? 'true' : 'false'"
   :class="[driver._flashClass, isTracked ? 'tracked-card-sticky ring-2 ring-inset ring-racing-blue shadow-[inset_0_0_12px_rgba(41,121,255,0.15)]' : cardBgClass, 'active:bg-surface-3']"
   @click="$emit('track', driver.STNR)"
 )
-  //- Row 1: Position, Name, Class, Detail button
-  .flex.items-center.gap-2.px-3.pt-2.pb-1
-    //- Position
-    .font-mono.font-bold.text-lg.w-8.text-center(:class="positionClass") {{ driver.POSITION }}
-    //- Position change
-    .w-6.text-center
-      span.text-xs.font-bold.inline-flex.items-center(v-if="chg > 0" class="text-racing-green" title="Gained positions")
-        ChevronUp(:size="14")
-        | {{ chg }}
-      span.text-xs.font-bold.inline-flex.items-center(v-else-if="chg < 0" class="text-racing-red" title="Lost positions")
-        ChevronDown(:size="14")
-        | {{ Math.abs(chg) }}
-      span.text-xs.text-gray-600(v-else) –
-    //- Car number
-    .font-mono.font-bold.text-sm.text-white.w-10.text-center \#{{ driver.STNR }}
-    //- Driver name
-    .text-sm.font-medium.text-white.truncate.flex-1 {{ driver.NAME }}
-    //- Class badge
-    span.rounded.text-xs.font-medium.whitespace-nowrap(
-      class="px-1.5 py-0.5"
-      :class="`${classColor.bg} ${classColor.text}`"
-    ) {{ driver.CLASSNAME }}
-    //- Detail button
-    button.text-sm.transition-opacity.ml-1.text-gray-400.opacity-50(
-      class="active:opacity-100"
-      @click.stop="$emit('select', driver.STNR)"
-      title="Show details"
-      aria-label="Show driver details"
-    )
-      Info(:size="16")
+  template(v-if="layoutMode === 'intermediate'")
+    .flex.items-start.gap-3.px-3.pt-3.pb-2
+      .flex.items-start.gap-2.shrink-0
+        .font-mono.font-bold.text-lg.w-8.text-center(:class="positionClass") {{ driver.POSITION }}
+        .w-6.text-center(class="pt-0.5")
+          span.text-xs.font-bold.inline-flex.items-center.ui-tooltip-anchor(v-if="chg > 0" class="text-racing-green" data-tooltip="Gained positions")
+            ChevronUp(:size="14")
+            | {{ chg }}
+          span.text-xs.font-bold.inline-flex.items-center.ui-tooltip-anchor(v-else-if="chg < 0" class="text-racing-red" data-tooltip="Lost positions")
+            ChevronDown(:size="14")
+            | {{ Math.abs(chg) }}
+          span.text-xs.text-gray-600(v-else) –
+        .font-mono.font-bold.text-sm.text-white.w-10.text-center.pt-1 \#{{ driver.STNR }}
+      .min-w-0.flex-1
+        .flex.items-start.gap-2
+          .min-w-0.flex-1
+            .text-sm.font-medium.text-white.truncate {{ driver.NAME }}
+            .text-xs.text-gray-400.truncate(v-if="driver.TEAM || driver.CAR")
+              span(v-if="driver.TEAM") {{ driver.TEAM }}
+              span.text-gray-600(v-if="driver.TEAM && driver.CAR")  · 
+              span(v-if="driver.CAR") {{ driver.CAR }}
+          span.rounded.text-xs.font-medium.whitespace-nowrap(
+            class="mt-0.5 px-1.5 py-0.5"
+            :class="`${classColor.bg} ${classColor.text}`"
+          ) {{ driver.CLASSNAME }}
+          button.text-sm.transition-opacity.text-gray-400.opacity-50.shrink-0(
+            class="active:opacity-100"
+            @click.stop="$emit('select', driver.STNR)"
+            title="Show details"
+            aria-label="Show driver details"
+          )
+            Info(:size="16")
 
-  //- Row 2: Team + Car
-  .flex.items-center.gap-2.px-3.text-xs.text-gray-400.truncate(v-if="driver.TEAM")
-    span.text-gray-500 {{ driver.TEAM }}
-    span.text-gray-600(v-if="driver.CAR") · {{ driver.CAR }}
+    .flex.flex-nowrap.items-center.gap-3.px-3.pb-1.text-xs.font-mono.overflow-x-auto.scrollbar-hide
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600 CP 
+        span(:class="classPositionClass") {{ driver.CLASSRANK }}
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600 Laps 
+        span.text-gray-400 {{ driver.LAPS }}
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600.inline-flex.items-center.gap-1.ui-tooltip-anchor(data-tooltip="Pit stops")
+          Wrench(:size="10")
+          | Pit
+        span.text-gray-400.ml-1 {{ driver.PITSTOPCOUNT }}
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600 PRED 
+        span(:class="predictedPosition ? predClass : 'text-gray-500'") {{ predictedPosition ?? '–' }}
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600 OPA 
+        span(:class="opaPosition ? opaClass : 'text-gray-500'") {{ opaPosition ?? '–' }}
 
-  //- Row 3: Key stats + PRED/OPA
-  .grid.grid-cols-2.gap-x-3.gap-y-1.px-3.py-2.text-xs.font-mono(class="sm:grid-cols-4")
-    .min-w-0
-      span.text-gray-600 CP 
-      span(:class="classPositionClass") {{ driver.CLASSRANK }}
-    .min-w-0
-      span.text-gray-600 Laps 
-      span.text-gray-400 {{ driver.LAPS }}
-    .min-w-0
-      span.text-gray-600 Gap 
-      span.text-gray-400 {{ displayGap || '–' }}
-    .min-w-0
-      span.text-gray-600 Int 
-      span.text-gray-400 {{ driver.INT || '–' }}
-    .min-w-0
-      span.text-gray-600 Last 
-      span(:class="lastLapClass") {{ driver.LASTLAPTIME || '–' }}
-    .min-w-0
-      span.text-gray-600 Best 
-      span(:class="bestLapClass") {{ driver.FASTESTLAP || '–' }}
-    .min-w-0
-      span.text-gray-600.inline-flex.items-center.gap-1(title="Pit stops")
-        Wrench(:size="10")
-        | Pit
-      span.text-gray-400.ml-1 {{ driver.PITSTOPCOUNT }}
-    .min-w-0(v-if="predictedPosition || opaPosition")
-      span.text-gray-600(v-if="predictedPosition") PRED 
-      span(v-if="predictedPosition" :class="predClass") {{ predictedPosition }}
-      span.text-gray-600.ml-2(v-if="opaPosition") OPA 
-      span(v-if="opaPosition" :class="opaClass") {{ opaPosition }}
+    .grid.grid-cols-2.gap-x-4.gap-y-1.px-3.pb-2.text-xs.font-mono(class="lg:grid-cols-4")
+      .min-w-0.whitespace-nowrap
+        span.text-gray-600 Last 
+        span(:class="lastLapClass") {{ driver.LASTLAPTIME || '–' }}
+      .min-w-0.whitespace-nowrap
+        span.text-gray-600 Best 
+        span(:class="bestLapClass") {{ driver.FASTESTLAP || '–' }}
+      .min-w-0.whitespace-nowrap
+        span.text-gray-600 Gap 
+        span.text-gray-400 {{ displayGap || '–' }}
+      .min-w-0.whitespace-nowrap
+        span.text-gray-600 Int 
+        span.text-gray-400 {{ driver.INT || '–' }}
+
+  template(v-else)
+    //- Row 1: Position, Name, Class, Detail button
+    .flex.items-center.gap-2.px-3.pt-2.pb-1
+      //- Position
+      .font-mono.font-bold.text-lg.w-8.text-center(:class="positionClass") {{ driver.POSITION }}
+      //- Position change
+      .w-6.text-center
+        span.text-xs.font-bold.inline-flex.items-center.ui-tooltip-anchor(v-if="chg > 0" class="text-racing-green" data-tooltip="Gained positions")
+          ChevronUp(:size="14")
+          | {{ chg }}
+        span.text-xs.font-bold.inline-flex.items-center.ui-tooltip-anchor(v-else-if="chg < 0" class="text-racing-red" data-tooltip="Lost positions")
+          ChevronDown(:size="14")
+          | {{ Math.abs(chg) }}
+        span.text-xs.text-gray-600(v-else) –
+      //- Car number
+      .font-mono.font-bold.text-sm.text-white.w-10.text-center \#{{ driver.STNR }}
+      //- Driver name
+      .text-sm.font-medium.text-white.truncate.flex-1 {{ driver.NAME }}
+      //- Class badge
+      span.rounded.text-xs.font-medium.whitespace-nowrap(
+        class="px-1.5 py-0.5"
+        :class="`${classColor.bg} ${classColor.text}`"
+      ) {{ driver.CLASSNAME }}
+      //- Detail button
+      button.text-sm.transition-opacity.ml-1.text-gray-400.opacity-50(
+        class="active:opacity-100"
+        @click.stop="$emit('select', driver.STNR)"
+        title="Show details"
+        aria-label="Show driver details"
+      )
+        Info(:size="16")
+
+    //- Row 2: Team + Car
+    .flex.items-center.gap-2.px-3.text-xs.text-gray-400.truncate(v-if="driver.TEAM")
+      span.text-gray-500 {{ driver.TEAM }}
+      span.text-gray-600(v-if="driver.CAR") · {{ driver.CAR }}
+
+    //- Row 3: Short stats
+    .flex.flex-nowrap.items-center.gap-3.px-3.pb-1.text-xs.font-mono.overflow-x-auto.scrollbar-hide
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600 CP 
+        span(:class="classPositionClass") {{ driver.CLASSRANK }}
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600 Laps 
+        span.text-gray-400 {{ driver.LAPS }}
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600.inline-flex.items-center.gap-1.ui-tooltip-anchor(data-tooltip="Pit stops")
+          Wrench(:size="10")
+          | Pit
+        span.text-gray-400.ml-1 {{ driver.PITSTOPCOUNT }}
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600 PRED 
+        span(:class="predictedPosition ? predClass : 'text-gray-500'") {{ predictedPosition ?? '–' }}
+      .whitespace-nowrap.shrink-0
+        span.text-gray-600 OPA 
+        span(:class="opaPosition ? opaClass : 'text-gray-500'") {{ opaPosition ?? '–' }}
+
+    //- Row 4: Long stats
+    .grid.grid-cols-2.gap-x-4.gap-y-1.px-3.pb-2.text-xs.font-mono
+      .min-w-0.whitespace-nowrap
+        span.text-gray-600 Last 
+        span(:class="lastLapClass") {{ driver.LASTLAPTIME || '–' }}
+      .min-w-0.whitespace-nowrap
+        span.text-gray-600 Best 
+        span(:class="bestLapClass") {{ driver.FASTESTLAP || '–' }}
+      .min-w-0.whitespace-nowrap
+        span.text-gray-600 Gap 
+        span.text-gray-400 {{ displayGap || '–' }}
+      .min-w-0.whitespace-nowrap
+        span.text-gray-600 Int 
+        span.text-gray-400 {{ driver.INT || '–' }}
 
   //- Row 5: Sectors (when available)
   .flex.items-center.px-3.pb-2.gap-1(v-if="hasSectors")
@@ -122,6 +195,8 @@ const props = defineProps<{
   trackedDriver: DriverInternal | null;
   predictedPosition: number | null;
   opaPosition: number | null;
+  layoutMode: 'stacked' | 'intermediate';
+  isPinned?: boolean;
 }>();
 
 defineEmits<{

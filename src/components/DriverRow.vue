@@ -1,5 +1,7 @@
 <template lang="pug">
 tr.cursor-pointer.transition-colors.border-b.border-gray-800(
+  :data-driver-id="driver.STNR"
+  :data-driver-pinned="isPinned ? 'true' : 'false'"
   :class="[driver._flashClass, isTracked ? 'tracked-sticky bg-racing-blue/25 ring-2 ring-inset ring-racing-blue shadow-[inset_0_0_12px_rgba(41,121,255,0.15)] hover:bg-racing-blue/35' : [rowBgClass, 'hover:bg-surface-3']]"
   @click="$emit('track', driver.STNR)"
 )
@@ -20,10 +22,10 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
 
   //- Position change
   td.text-center.w-10(class="py-1 sm:py-1.5 px-0.5 sm:px-1")
-    span.text-xs.font-bold.flex.items-center.justify-center(v-if="chg > 0" class="text-racing-green" title="Gained positions")
+    span.text-xs.font-bold.flex.items-center.justify-center.ui-tooltip-anchor(v-if="chg > 0" class="text-racing-green" data-tooltip="Gained positions")
       ChevronUp(:size="14")
       | {{ chg }}
-    span.text-xs.font-bold.flex.items-center.justify-center(v-else-if="chg < 0" class="text-racing-red" title="Lost positions")
+    span.text-xs.font-bold.flex.items-center.justify-center.ui-tooltip-anchor(v-else-if="chg < 0" class="text-racing-red" data-tooltip="Lost positions")
       ChevronDown(:size="14")
       | {{ Math.abs(chg) }}
     span.text-xs.text-gray-600(v-else) –
@@ -106,7 +108,7 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
   td.text-center.font-mono.text-xs.w-14.whitespace-nowrap(class="py-1.5 px-2")
     template(v-if="predictedPosition")
       span(:class="predClass") {{ predictedPosition }}
-      span.ml-1.text-xxs.inline-flex.items-center(v-if="predDelta !== 0" :class="predDelta > 0 ? 'text-racing-green' : 'text-racing-red'")
+      span.ml-1.text-xxs.inline-flex.items-center.ui-tooltip-anchor(v-if="predDelta !== 0" :class="predDelta > 0 ? 'text-racing-green' : 'text-racing-red'" :data-tooltip="predDelta > 0 ? 'Predicted gain' : 'Predicted loss'")
         ChevronUp(v-if="predDelta > 0" :size="10")
         ChevronDown(v-else :size="10")
         | {{ Math.abs(predDelta) }}
@@ -117,7 +119,7 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
   td.text-center.font-mono.text-xs.w-14.whitespace-nowrap(class="py-1.5 px-2")
     template(v-if="opaPosition")
       span(:class="opaClass") {{ opaPosition }}
-      span.ml-1.text-xxs.inline-flex.items-center(v-if="opaDelta !== 0" :class="opaDelta > 0 ? 'text-racing-green' : 'text-racing-red'")
+      span.ml-1.text-xxs.inline-flex.items-center.ui-tooltip-anchor(v-if="opaDelta !== 0" :class="opaDelta > 0 ? 'text-racing-green' : 'text-racing-red'" :data-tooltip="opaDelta > 0 ? 'On-pace gain' : 'On-pace loss'")
         ChevronUp(v-if="opaDelta > 0" :size="10")
         ChevronDown(v-else :size="10")
         | {{ Math.abs(opaDelta) }}
@@ -140,6 +142,7 @@ const props = defineProps<{
   trackedDriver: DriverInternal | null;
   predictedPosition: number | null;
   opaPosition: number | null;
+  isPinned?: boolean;
 }>();
 
 defineEmits<{
