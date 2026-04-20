@@ -4,6 +4,68 @@ import type { Driver, DriverInternal, RaceData, RaceInfo } from "../models";
 import { CLASS_ORDER } from "../utils/classColors";
 
 const HIGHLIGHT_DURATION = 3000;
+const CLASS_FILTER_STORAGE_KEY = "nls-selectedClasses";
+const DEFAULT_SECTOR_COUNT = 5;
+const MAX_SECTOR_COUNT = 9;
+
+function clampSectorCount(count: number | null | undefined): number {
+  if (!count || !Number.isFinite(count)) return DEFAULT_SECTOR_COUNT;
+  return Math.max(1, Math.min(MAX_SECTOR_COUNT, Math.floor(count)));
+}
+
+function getSectorCountFromLengths(data: RaceData): number {
+  for (let sectorNumber = MAX_SECTOR_COUNT; sectorNumber >= 1; sectorNumber -= 1) {
+    const lengthValue = Number(data[`S${sectorNumber}L` as keyof RaceData]) || 0;
+    if (lengthValue > 0) return sectorNumber;
+  }
+
+  return 0;
+}
+
+function deriveSectorCount(data: RaceData): number {
+  const intermediateCount = Number(data.NROFINTERMEDIATETIMES) || 0;
+  const trackLengthSectorCount = getSectorCountFromLengths(data);
+
+  return clampSectorCount(
+    Math.max(trackLengthSectorCount, intermediateCount > 0 ? intermediateCount + 1 : 0),
+  );
+}
+
+function loadSelectedClasses(): Set<string> {
+  const stored = localStorage.getItem(CLASS_FILTER_STORAGE_KEY);
+  if (!stored) return new Set();
+
+  try {
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(
+      parsed.filter((value): value is string => typeof value === "string"),
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+function getDisplayedSectorNumber(
+  driver: Pick<Driver, "LASTINTERMEDIATENUMBER">,
+  sectorCount = DEFAULT_SECTOR_COUNT,
+): number | null {
+  const normalizedSectorCount = clampSectorCount(sectorCount);
+  const lin = Number(driver.LASTINTERMEDIATENUMBER) || 0;
+  if (lin < 0 || lin >= normalizedSectorCount * 2) return null;
+  return Math.floor(lin / 2) + 1;
+}
+
+function getCompletedSectorCount(
+  driver: Pick<Driver, "LASTINTERMEDIATENUMBER">,
+  sectorCount = DEFAULT_SECTOR_COUNT,
+): number {
+  const normalizedSectorCount = clampSectorCount(sectorCount);
+  const lin = Number(driver.LASTINTERMEDIATENUMBER) || 0;
+  if (lin <= 0) return 0;
+  if (lin >= normalizedSectorCount * 2) return normalizedSectorCount;
+  return Math.floor(lin / 2);
+}
 
 // Singleton state
 const raceInfo: RaceInfo = reactive({
@@ -18,11 +80,19 @@ const raceInfo: RaceInfo = reactive({
 });
 
 const drivers: Map<string, DriverInternal> = reactive(new Map());
-const selectedClasses: Ref<Set<string>> = ref(new Set());
+const selectedClasses: Ref<Set<string>> = ref(loadSelectedClasses());
 const selectedDriver: Ref<string | null> = ref(null);
 const trackedDriver: Ref<string | null> = ref(
   localStorage.getItem("nls-trackedDriver"),
 );
+
+watch(selectedClasses, (value) => {
+  if (value.size > 0) {
+    localStorage.setItem(CLASS_FILTER_STORAGE_KEY, JSON.stringify([...value]));
+  } else {
+    localStorage.removeItem(CLASS_FILTER_STORAGE_KEY);
+  }
+});
 
 watch(trackedDriver, (v) => {
   if (v) localStorage.setItem("nls-trackedDriver", v);
@@ -31,7 +101,16 @@ watch(trackedDriver, (v) => {
 
 const sortedDrivers: ComputedRef<DriverInternal[]> = computed(() => {
   const arr = Array.from(drivers.values());
-  arr.sort((a, b) => Number(a.POSITION) - Number(b.POSITION));
+  const sectorCount = clampSectorCount(raceInfo.sectorCount);
+  arr.sort((a, b) => {
+    const lapDelta = (Number(b.LAPS) || 0) - (Number(a.LAPS) || 0);
+    if (lapDelta !== 0) return lapDelta;
+
+    const sectorDelta = getCompletedSectorCount(b, sectorCount) - getCompletedSectorCount(a, sectorCount);
+    if (sectorDelta !== 0) return sectorDelta;
+
+    return Number(a.POSITION) - Number(b.POSITION);
+  });
   return arr;
 });
 
@@ -50,6 +129,21 @@ const availableClasses: ComputedRef<string[]> = computed(() => {
   return sorted;
 });
 
+watch(availableClasses, (classes) => {
+  if (classes.length === 0 || selectedClasses.value.size === 0) return;
+
+  const validClasses = new Set(classes);
+  const next = new Set(
+    [...selectedClasses.value].filter((className) =>
+      validClasses.has(className),
+    ),
+  );
+
+  if (next.size !== selectedClasses.value.size) {
+    selectedClasses.value = next;
+  }
+});
+
 const filteredDrivers: ComputedRef<DriverInternal[]> = computed(() => {
   if (selectedClasses.value.size === 0) return sortedDrivers.value;
   return sortedDrivers.value.filter((d) =>
@@ -65,8 +159,7 @@ function processRaceData(data: RaceData): void {
   if (data.HEAT) raceInfo.heat = data.HEAT;
   if (data.SESSION) raceInfo.session = data.SESSION;
   if (data.TRACKLENGTH) raceInfo.trackLength = Number(data.TRACKLENGTH);
-  if (data.NROFINTERMEDIATETIMES)
-    raceInfo.sectorCount = Number(data.NROFINTERMEDIATETIMES);
+  raceInfo.sectorCount = deriveSectorCount(data);
   if (data.TOD) {
     raceInfo.tod = Number(data.TOD);
     // Estimate race start from TOD and leader's ETA/laps on first full update
@@ -103,6 +196,8 @@ function parseLapTimeToSeconds(timeStr: string): number | null {
 }
 
 function updateDrivers(results: Driver[]): void {
+  const sectorCount = clampSectorCount(raceInfo.sectorCount);
+
   for (const entry of results) {
     const stnr = entry.STNR;
     const existing = drivers.get(stnr);
@@ -123,13 +218,20 @@ function updateDrivers(results: Driver[]): void {
     // Capture sector times from previous update when laps change
     const lapsChanged = existing && existing.LAPS !== entry.LAPS;
     const prevSectors = lapsChanged
-      ? [1, 2, 3, 4, 5].map((s) => (existing[`S${s}TIME`] as string) || "")
-      : (existing?._prevSectors ?? ["", "", "", "", ""]);
+      ? Array.from({ length: sectorCount }, (_, index) => {
+          const sectorNumber = index + 1;
+          return (existing?.[`S${sectorNumber}TIME`] as string) || "";
+        })
+      : Array.from({ length: sectorCount }, (_, index) => existing?._prevSectors?.[index] ?? "");
 
-    // Track when the car enters a new sector
+    // Real feed updates can change the raw intermediate number twice inside the same sector.
+    // Only reset the running sector timer when the displayed sector actually changes.
+    const previousDisplayedSector = existing
+      ? getDisplayedSectorNumber(existing, sectorCount)
+      : null;
+    const nextDisplayedSector = getDisplayedSectorNumber(entry, sectorCount);
     const sectorChanged =
-      existing &&
-      existing.LASTINTERMEDIATENUMBER !== entry.LASTINTERMEDIATENUMBER;
+      existing && previousDisplayedSector !== nextDisplayedSector;
     const sectorEntryTime = sectorChanged
       ? Date.now()
       : (existing?._sectorEntryTime ?? Date.now());

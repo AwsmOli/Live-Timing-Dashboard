@@ -25,24 +25,26 @@ Transition(name="slide")
           span.text-gray-600 •
           span {{ driver.CAR }}
         .flex.items-center.gap-4.mt-2
-          .flex.items-center.gap-1
+          .flex.items-center.gap-1(title="Overall position")
             Trophy(:size="12" class="text-gray-500")
             span.font-mono.font-bold.text-white P{{ driver.POSITION }}
-          .flex.items-center.gap-1
+          .flex.items-center.gap-1(title="Class position")
             Flag(:size="12" class="text-gray-500")
             span.font-mono.font-bold.text-white P{{ driver.CLASSRANK }}
-          .flex.items-center.gap-1
+          .flex.items-center.gap-1(title="Completed laps")
             RotateCw(:size="12" class="text-gray-500")
             span.font-mono.text-white {{ driver.LAPS }}
-          .flex.items-center.gap-1
+          .flex.items-center.gap-1(title="Pit stops")
             WrenchIcon(:size="12" class="text-gray-500")
             span.font-mono.text-white {{ driver.PITSTOPCOUNT }}
-          .flex.items-center.gap-1(v-if="driver.TPST")
+          .flex.items-center.gap-1(v-if="driver.TPST" title="Total pit stop time")
             Timer(:size="12" class="text-gray-500")
             span.font-mono.text-white {{ driver.TPST }}
       button.text-gray-400.p-1.rounded.transition-colors(
         class="hover:text-white hover:bg-surface-3"
         @click="selectedDriver = null"
+        title="Close details"
+        aria-label="Close driver details"
       )
         X(:size="24")
 
@@ -92,11 +94,10 @@ Transition(name="slide")
             tr.border-b.border-gray-700
               th.px-2.py-1.text-left.text-xs.text-gray-500.font-semibold Lap
               th.px-2.py-1.text-right.text-xs.text-gray-500.font-semibold Time
-              th.px-2.py-1.text-right.text-xs.text-gray-500.font-semibold S1
-              th.px-2.py-1.text-right.text-xs.text-gray-500.font-semibold S2
-              th.px-2.py-1.text-right.text-xs.text-gray-500.font-semibold S3
-              th.px-2.py-1.text-right.text-xs.text-gray-500.font-semibold S4
-              th.px-2.py-1.text-right.text-xs.text-gray-500.font-semibold S5
+              th.px-2.py-1.text-right.text-xs.text-gray-500.font-semibold(
+                v-for="sectorNumber in sectorNumbers"
+                :key="`head-${sectorNumber}`"
+              ) S{{ sectorNumber }}
               th.px-2.py-1.text-center.text-xs.text-gray-500.font-semibold Pos
               th.px-2.py-1.text-center.text-xs.text-gray-500.font-semibold CP
               th.px-2.py-1.text-center.text-xs.text-gray-500.font-semibold
@@ -109,11 +110,10 @@ Transition(name="slide")
               td.px-2.py-1.font-mono.text-sm.text-gray-300 {{ lap.lapNumber }}
               td.px-2.py-1.font-mono.text-sm.text-right(:class="lapTimeClass(lap)")
                 | {{ lap.lapTime }}
-              td.px-2.py-1.font-mono.text-xs.text-right.text-gray-400 {{ lap.s1 || '–' }}
-              td.px-2.py-1.font-mono.text-xs.text-right.text-gray-400 {{ lap.s2 || '–' }}
-              td.px-2.py-1.font-mono.text-xs.text-right.text-gray-400 {{ lap.s3 || '–' }}
-              td.px-2.py-1.font-mono.text-xs.text-right.text-gray-400 {{ lap.s4 || '–' }}
-              td.px-2.py-1.font-mono.text-xs.text-right.text-gray-400 {{ lap.s5 || '–' }}
+              td.px-2.py-1.font-mono.text-xs.text-right.text-gray-400(
+                v-for="sectorNumber in sectorNumbers"
+                :key="`${lap.lapNumber}-${sectorNumber}`"
+              ) {{ lap.sectors[sectorNumber - 1] || '–' }}
               td.px-2.py-1.font-mono.text-xs.text-center.text-gray-300 {{ lap.position }}
               td.px-2.py-1.font-mono.text-xs.text-center.text-gray-400 {{ lap.classPosition }}
               td.px-2.py-1.text-center
@@ -186,6 +186,10 @@ const lapHistory = computed(() => getLapHistory(selectedDriver.value));
 const pitStops = computed(() => getPitStops(selectedDriver.value));
 const driverChanges = computed(() => getDriverChanges(selectedDriver.value));
 const driversSeen = computed(() => getDriversSeen(selectedDriver.value));
+const sectorNumbers = computed(() => {
+  const count = lapHistory.value.reduce((maxCount, lap) => Math.max(maxCount, lap.sectors.length), 0);
+  return Array.from({ length: Math.max(1, count) }, (_, index) => index + 1);
+});
 
 const bestLapNumber = computed(() => {
   if (lapHistory.value.length === 0) return null;
@@ -205,7 +209,7 @@ const driverChangeLaps = computed(() => {
   return new Set(driverChanges.value.map(c => c.atLap));
 });
 
-function isDriverChangeLap(lapNum) {
+function isDriverChangeLap(lapNum: number) {
   return driverChangeLaps.value.has(lapNum);
 }
 

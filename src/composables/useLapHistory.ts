@@ -9,6 +9,17 @@ import type {
 } from "../models";
 
 const carHistories: Map<string, CarHistory> = reactive(new Map());
+const DEFAULT_SECTOR_COUNT = 5;
+const MAX_SECTOR_COUNT = 9;
+
+function getSectorCount(driver: Driver | DriverInternal): number {
+  for (let sectorNumber = MAX_SECTOR_COUNT; sectorNumber >= 1; sectorNumber -= 1) {
+    const key = `S${sectorNumber}TIME`;
+    if (key in driver) return sectorNumber;
+  }
+
+  return DEFAULT_SECTOR_COUNT;
+}
 
 function ensureCar(stnr: string): CarHistory {
   if (!carHistories.has(stnr)) {
@@ -53,15 +64,15 @@ export function processLapHistoryUpdate(
     const newPitCount = Number(entry.PITSTOPCOUNT);
 
     if (newLaps > prevLaps && entry.LASTLAPTIME) {
+      const sectorCount = getSectorCount(existing);
       const lap: LapRecord = {
         lapNumber: newLaps,
         lapTime: entry.LASTLAPTIME,
         llts: entry.LLTS,
-        s1: existing.S1TIME || "",
-        s2: existing.S2TIME || "",
-        s3: existing.S3TIME || "",
-        s4: existing.S4TIME || "",
-        s5: existing.S5TIME || "",
+        sectors: Array.from({ length: sectorCount }, (_, index) => {
+          const sectorNumber = index + 1;
+          return (existing[`S${sectorNumber}TIME`] as string) || "";
+        }),
         position: Number(entry.POSITION),
         classPosition: Number(entry.CLASSRANK),
         timestamp: Date.now(),

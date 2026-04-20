@@ -1,4 +1,4 @@
-import type { Readonly, Ref } from "vue";
+import type { Ref } from "vue";
 
 /** Raw driver entry from the WebSocket RESULT array */
 export interface Driver {
@@ -43,6 +43,22 @@ export interface Driver {
   ST5T: string;
   S5SPEED: string;
   ST5V: string;
+  S6TIME?: string;
+  ST6T?: string;
+  S6SPEED?: string;
+  ST6V?: string;
+  S7TIME?: string;
+  ST7T?: string;
+  S7SPEED?: string;
+  ST7V?: string;
+  S8TIME?: string;
+  ST8T?: string;
+  S8SPEED?: string;
+  ST8V?: string;
+  S9TIME?: string;
+  ST9T?: string;
+  S9SPEED?: string;
+  ST9V?: string;
   TOPSPEED: string;
   TEAM: string;
   TPST: string;
@@ -118,11 +134,7 @@ export interface LapRecord {
   lapNumber: number;
   lapTime: string;
   llts: string;
-  s1: string;
-  s2: string;
-  s3: string;
-  s4: string;
-  s5: string;
+  sectors: string[];
   position: number;
   classPosition: number;
   timestamp: number;

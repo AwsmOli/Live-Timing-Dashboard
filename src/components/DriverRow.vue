@@ -10,6 +10,7 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
       :class="'text-gray-400'"
       @click.stop="$emit('select', driver.STNR)"
       title="Show details"
+      aria-label="Show driver details"
     )
       Info(:size="14")
 
@@ -18,11 +19,11 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
     | {{ driver.POSITION }}
 
   //- Position change
-  td.text-center.w-10(class="py-1 sm:py-1.5 px-0.5 sm:px-1 hidden sm:table-cell")
-    span.text-xs.font-bold.flex.items-center.justify-center(v-if="chg > 0" class="text-racing-green")
+  td.text-center.w-10(class="py-1 sm:py-1.5 px-0.5 sm:px-1")
+    span.text-xs.font-bold.flex.items-center.justify-center(v-if="chg > 0" class="text-racing-green" title="Gained positions")
       ChevronUp(:size="14")
       | {{ chg }}
-    span.text-xs.font-bold.flex.items-center.justify-center(v-else-if="chg < 0" class="text-racing-red")
+    span.text-xs.font-bold.flex.items-center.justify-center(v-else-if="chg < 0" class="text-racing-red" title="Lost positions")
       ChevronDown(:size="14")
       | {{ Math.abs(chg) }}
     span.text-xs.text-gray-600(v-else) –
@@ -36,26 +37,26 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
     | {{ driver.NAME }}
 
   //- Team
-  td.text-xs.text-gray-400.whitespace-nowrap.max-w-40.truncate(class="py-1.5 hidden lg:table-cell px-2")
+  td.text-xs.text-gray-400.whitespace-nowrap.max-w-40.truncate(class="py-1.5 px-2")
     | {{ driver.TEAM }}
 
   //- Car
-  td.text-xs.text-gray-500.whitespace-nowrap.max-w-36.truncate(class="py-1.5 hidden xl:table-cell px-2")
+  td.text-xs.text-gray-500.whitespace-nowrap.max-w-36.truncate(class="py-1.5 px-2")
     | {{ driver.CAR }}
 
   //- Class badge
-  td(class="py-1 sm:py-1.5 hidden sm:table-cell px-1 sm:px-2")
+  td(class="py-1 sm:py-1.5 px-1 sm:px-2")
     span.rounded.text-xs.font-medium.whitespace-nowrap(
       class="px-1 sm:px-1.5 py-0.5"
       :class="`${classColor.bg} ${classColor.text}`"
     ) {{ driver.CLASSNAME }}
 
   //- Class position
-  td.text-center.font-mono.text-xs.w-10(class="py-1 sm:py-1.5 hidden sm:table-cell px-1 sm:px-2" :class="classPositionClass")
+  td.text-center.font-mono.text-xs.w-10(class="py-1 sm:py-1.5 px-1 sm:px-2" :class="classPositionClass")
     | P{{ driver.CLASSRANK }}
 
   //- Laps
-  td.text-center.font-mono.text-sm.text-gray-300.w-12(class="py-1 sm:py-1.5 hidden sm:table-cell px-1 sm:px-2")
+  td.text-center.font-mono.text-sm.text-gray-300.w-12(class="py-1 sm:py-1.5 px-1 sm:px-2")
     | {{ driver.LAPS }}
 
   //- Gap
@@ -63,15 +64,15 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
     | {{ displayGap }}
 
   //- Interval
-  td.text-right.font-mono.text-xs.text-gray-400.whitespace-nowrap.w-20(class="py-1.5 hidden md:table-cell px-2")
+  td.text-right.font-mono.text-xs.text-gray-400.whitespace-nowrap.w-20(class="py-1.5 px-2")
     | {{ driver.INT }}
 
-  //- Sector times S1-S5 (with deltas when tracking)
+  //- Sector times
   td.text-right.font-mono.text-xs.whitespace-nowrap.w-18.relative(
-    v-for="s in 5"
+    v-for="s in sectorNumbers"
     :key="s"
     :class="[sectorDeltaClass(s)]"
-    class="py-1.5 hidden 2xl:table-cell px-1"
+    class="py-1.5 px-1"
   )
     template(v-if="sectorDelta(s) !== null")
       span(:class="isPrevSectorDelta(s) ? 'opacity-40' : ''") {{ sectorDelta(s) }}
@@ -94,15 +95,15 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
     | {{ driver.LASTLAPTIME || '–' }}
 
   //- Best lap
-  td.text-right.font-mono.text-xs.whitespace-nowrap.w-20(class="py-1.5 hidden md:table-cell px-2" :class="bestLapClass")
+  td.text-right.font-mono.text-xs.whitespace-nowrap.w-20(class="py-1.5 px-2" :class="bestLapClass")
     | {{ driver.FASTESTLAP || '–' }}
 
   //- Pit stops
-  td.text-center.font-mono.text-xs.text-gray-400.w-10(class="py-1 sm:py-1.5 hidden sm:table-cell px-1 sm:px-2")
+  td.text-center.font-mono.text-xs.text-gray-400.w-10(class="py-1 sm:py-1.5 px-1 sm:px-2")
     | {{ driver.PITSTOPCOUNT }}
 
   //- Predicted position
-  td.text-center.font-mono.text-xs.w-14.whitespace-nowrap(class="py-1.5 hidden lg:table-cell px-2")
+  td.text-center.font-mono.text-xs.w-14.whitespace-nowrap(class="py-1.5 px-2")
     template(v-if="predictedPosition")
       span(:class="predClass") {{ predictedPosition }}
       span.ml-1.text-xxs.inline-flex.items-center(v-if="predDelta !== 0" :class="predDelta > 0 ? 'text-racing-green' : 'text-racing-red'")
@@ -113,7 +114,7 @@ tr.cursor-pointer.transition-colors.border-b.border-gray-800(
       span.text-gray-600 –
 
   //- OPA position
-  td.text-center.font-mono.text-xs.w-14.whitespace-nowrap(class="py-1.5 hidden lg:table-cell px-2")
+  td.text-center.font-mono.text-xs.w-14.whitespace-nowrap(class="py-1.5 px-2")
     template(v-if="opaPosition")
       span(:class="opaClass") {{ opaPosition }}
       span.ml-1.text-xxs.inline-flex.items-center(v-if="opaDelta !== 0" :class="opaDelta > 0 ? 'text-racing-green' : 'text-racing-red'")
@@ -130,6 +131,7 @@ import type { DriverInternal } from '../models';
 import { getClassColor } from '../utils/classColors';
 import { Info, ChevronUp, ChevronDown } from 'lucide-vue-next';
 import { useNow } from '../composables/useNow';
+import { useRaceState } from '../composables/useRaceState';
 
 const props = defineProps<{
   driver: DriverInternal;
@@ -144,6 +146,8 @@ defineEmits<{
   select: [stnr: string];
   track: [stnr: string];
 }>();
+
+const { raceInfo } = useRaceState();
 
 const chg = computed(() => Number(props.driver.CHG) || 0);
 
@@ -231,6 +235,8 @@ const bestLapClass = computed(() => {
   return 'text-gray-300';
 });
 
+const sectorNumbers = computed(() => Array.from({ length: Math.max(1, raceInfo.sectorCount || 5) }, (_, index) => index + 1));
+
 function parseSectorTime(timeStr: string | undefined): number | null {
   if (!timeStr) return null;
   const parts = timeStr.split(':');
@@ -272,10 +278,11 @@ function sectorDeltaClass(sectorNum: number): string {
   return 'text-gray-400';
 }
 
-// Which sector the car is currently in (1-5), or null if lap completed
+// Which sector the car is currently in, or null if lap completed
 const currentSector = computed(() => {
   const lin = Number(props.driver.LASTINTERMEDIATENUMBER) || 0;
-  if (lin < 0 || lin >= 10) return null;
+  const sectorCount = sectorNumbers.value.length;
+  if (lin < 0 || lin >= sectorCount * 2) return null;
   return Math.floor(lin / 2) + 1;
 });
 

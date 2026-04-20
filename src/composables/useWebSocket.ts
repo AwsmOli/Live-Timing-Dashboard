@@ -123,9 +123,26 @@ export function useWebSocket(onMessage: (data: RaceData) => void): DataSource {
 
   function destroy() {
     destroyed = true;
+    document.removeEventListener("visibilitychange", handleVisibility);
     cleanup();
     connectionStatus.value = "disconnected";
   }
+
+  // Suspend WS when tab is hidden / PC sleeps, reconnect fresh when visible
+  function handleVisibility() {
+    if (destroyed) return;
+    if (document.hidden) {
+      cleanup();
+      connectionStatus.value = "disconnected";
+    } else {
+      // Reconnect fresh — reset PID so we get a full snapshot
+      currentEventPid = null;
+      reconnectDelay = RECONNECT_BASE;
+      connect();
+    }
+  }
+
+  document.addEventListener("visibilitychange", handleVisibility);
 
   return {
     connectionStatus: readonly(connectionStatus),

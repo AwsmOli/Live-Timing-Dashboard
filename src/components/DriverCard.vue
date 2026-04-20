@@ -1,5 +1,5 @@
 <template lang="pug">
-.border-b.border-gray-800.cursor-pointer.transition-colors(
+.rounded-xl.border.border-gray-800.cursor-pointer.transition-colors.overflow-hidden(
   :class="[driver._flashClass, isTracked ? 'tracked-card-sticky ring-2 ring-inset ring-racing-blue shadow-[inset_0_0_12px_rgba(41,121,255,0.15)]' : cardBgClass, 'active:bg-surface-3']"
   @click="$emit('track', driver.STNR)"
 )
@@ -9,10 +9,10 @@
     .font-mono.font-bold.text-lg.w-8.text-center(:class="positionClass") {{ driver.POSITION }}
     //- Position change
     .w-6.text-center
-      span.text-xs.font-bold.inline-flex.items-center(v-if="chg > 0" class="text-racing-green")
+      span.text-xs.font-bold.inline-flex.items-center(v-if="chg > 0" class="text-racing-green" title="Gained positions")
         ChevronUp(:size="14")
         | {{ chg }}
-      span.text-xs.font-bold.inline-flex.items-center(v-else-if="chg < 0" class="text-racing-red")
+      span.text-xs.font-bold.inline-flex.items-center(v-else-if="chg < 0" class="text-racing-red" title="Lost positions")
         ChevronDown(:size="14")
         | {{ Math.abs(chg) }}
       span.text-xs.text-gray-600(v-else) –
@@ -30,6 +30,7 @@
       class="active:opacity-100"
       @click.stop="$emit('select', driver.STNR)"
       title="Show details"
+      aria-label="Show driver details"
     )
       Info(:size="16")
 
@@ -39,40 +40,50 @@
     span.text-gray-600(v-if="driver.CAR") · {{ driver.CAR }}
 
   //- Row 3: Key stats + PRED/OPA
-  .flex.items-center.justify-between.px-3.py-1.gap-1
-    .flex.items-center.gap-3.text-xs.font-mono
-      span(:class="classPositionClass") P{{ driver.CLASSRANK }}
-      span.text-gray-400 L{{ driver.LAPS }}
-      span
-        span.text-gray-600 Gap 
-        span.text-gray-400 {{ displayGap || '–' }}
-    .flex.items-center.gap-3.text-xs.font-mono
-      span.text-gray-500.inline-flex.items-center.gap-1(v-if="Number(driver.PITSTOPCOUNT) > 0")
+  .grid.grid-cols-2.gap-x-3.gap-y-1.px-3.py-2.text-xs.font-mono(class="sm:grid-cols-4")
+    .min-w-0
+      span.text-gray-600 CP 
+      span(:class="classPositionClass") {{ driver.CLASSRANK }}
+    .min-w-0
+      span.text-gray-600 Laps 
+      span.text-gray-400 {{ driver.LAPS }}
+    .min-w-0
+      span.text-gray-600 Gap 
+      span.text-gray-400 {{ displayGap || '–' }}
+    .min-w-0
+      span.text-gray-600 Int 
+      span.text-gray-400 {{ driver.INT || '–' }}
+    .min-w-0
+      span.text-gray-600 Last 
+      span(:class="lastLapClass") {{ driver.LASTLAPTIME || '–' }}
+    .min-w-0
+      span.text-gray-600 Best 
+      span(:class="bestLapClass") {{ driver.FASTESTLAP || '–' }}
+    .min-w-0
+      span.text-gray-600.inline-flex.items-center.gap-1(title="Pit stops")
         Wrench(:size="10")
-        | {{ driver.PITSTOPCOUNT }}
-      span(v-if="predictedPosition")
-        span.text-gray-600 PRED 
-        span(:class="predClass") {{ predictedPosition }}
-      span(v-if="opaPosition")
-        span.text-gray-600 OPA 
-        span(:class="opaClass") {{ opaPosition }}
-
-  //- Row 4: Last/Best
-  .flex.items-center.justify-between.px-3.py-1.gap-1
-    .flex.items-center.gap-3.text-xs.font-mono
-      span
-        span.text-gray-600 Last 
-        span(:class="lastLapClass") {{ driver.LASTLAPTIME || '–' }}
-      span
-        span.text-gray-600 Best 
-        span(:class="bestLapClass") {{ driver.FASTESTLAP || '–' }}
+        | Pit
+      span.text-gray-400.ml-1 {{ driver.PITSTOPCOUNT }}
+    .min-w-0(v-if="predictedPosition || opaPosition")
+      span.text-gray-600(v-if="predictedPosition") PRED 
+      span(v-if="predictedPosition" :class="predClass") {{ predictedPosition }}
+      span.text-gray-600.ml-2(v-if="opaPosition") OPA 
+      span(v-if="opaPosition" :class="opaClass") {{ opaPosition }}
 
   //- Row 5: Sectors (when available)
   .flex.items-center.px-3.pb-2.gap-1(v-if="hasSectors")
     .flex.items-center.gap-2.text-xs.font-mono.flex-wrap
-      template(v-for="s in 5" :key="s")
-        span.whitespace-nowrap.relative.pb-1(v-if="driver[`S${s}TIME`]" :class="sectorDeltaClass(s)")
-          | S{{ s }} {{ sectorValue(s) }}
+      template(v-for="s in sectorNumbers" :key="s")
+        span.whitespace-nowrap.relative.pb-1(v-if="sectorDelta(s) !== null" :class="sectorDeltaClass(s)")
+          span(:class="isPrevSectorDelta(s) ? 'opacity-40' : ''") S{{ s }} {{ sectorDelta(s) }}
+          .absolute.bottom-0.left-0.right-0.rounded-full(
+            v-if="currentSector === s"
+            class="h-1"
+            :class="sectorBarHasRef(s) ? (sectorLate(s) ? 'bg-racing-red' : 'bg-racing-green') + ' transition-all duration-200' : 'bg-racing-blue/40 animate-pulse'"
+            :style="{ width: sectorProgressPct(s) + '%', minWidth: '4px' }"
+          )
+        span.whitespace-nowrap.relative.pb-1(v-else-if="driver[`S${s}TIME`]" :class="sectorDeltaClass(s)")
+          | S{{ s }} {{ driver[`S${s}TIME`] }}
           .absolute.bottom-0.left-0.right-0.rounded-full(
             v-if="currentSector === s"
             class="h-1"
@@ -82,14 +93,6 @@
         span.whitespace-nowrap.relative.pb-1(v-else-if="currentSector === s" :class="sectorLate(s) ? 'text-racing-red' : 'text-racing-green'")
           | S{{ s }} {{ runningSectorTime(s) }}
           .absolute.bottom-0.left-0.right-0.rounded-full(
-            class="h-1"
-            :class="sectorBarHasRef(s) ? (sectorLate(s) ? 'bg-racing-red' : 'bg-racing-green') + ' transition-all duration-200' : 'bg-racing-blue/40 animate-pulse'"
-            :style="{ width: sectorProgressPct(s) + '%', minWidth: '4px' }"
-          )
-        span.whitespace-nowrap.relative.pb-1(v-else-if="driver._prevSectors[s - 1] && sectorDelta(s) !== null" :class="sectorDeltaClass(s)")
-          span.opacity-40 S{{ s }} {{ sectorDelta(s) }}
-          .absolute.bottom-0.left-0.right-0.rounded-full(
-            v-if="currentSector === s"
             class="h-1"
             :class="sectorBarHasRef(s) ? (sectorLate(s) ? 'bg-racing-red' : 'bg-racing-green') + ' transition-all duration-200' : 'bg-racing-blue/40 animate-pulse'"
             :style="{ width: sectorProgressPct(s) + '%', minWidth: '4px' }"
@@ -110,6 +113,7 @@ import type { DriverInternal } from '../models';
 import { getClassColor } from '../utils/classColors';
 import { Info, ChevronUp, ChevronDown, Wrench } from 'lucide-vue-next';
 import { useNow } from '../composables/useNow';
+import { useRaceState } from '../composables/useRaceState';
 
 const props = defineProps<{
   driver: DriverInternal;
@@ -124,6 +128,8 @@ defineEmits<{
   select: [stnr: string];
   track: [stnr: string];
 }>();
+
+const { raceInfo } = useRaceState();
 
 const chg = computed(() => Number(props.driver.CHG) || 0);
 
@@ -209,18 +215,21 @@ const bestLapClass = computed(() => {
   return 'text-gray-300';
 });
 
+const sectorNumbers = computed(() => Array.from({ length: Math.max(1, raceInfo.sectorCount || 5) }, (_, index) => index + 1));
+
 const hasSectors = computed(() => {
-  for (let s = 1; s <= 5; s++) {
+  for (const s of sectorNumbers.value) {
     if (props.driver[`S${s}TIME`]) return true;
   }
   if (currentSector.value) return true;
   return props.driver._prevSectors?.some(s => s !== '') ?? false;
 });
 
-// Which sector the car is currently in (1-5), or null if lap completed
+// Which sector the car is currently in, or null if lap completed
 const currentSector = computed(() => {
   const lin = Number(props.driver.LASTINTERMEDIATENUMBER) || 0;
-  if (lin < 0 || lin >= 10) return null;
+  const sectorCount = sectorNumbers.value.length;
+  if (lin < 0 || lin >= sectorCount * 2) return null;
   return Math.floor(lin / 2) + 1;
 });
 
@@ -244,13 +253,6 @@ function sectorDelta(sectorNum: number): string | null {
   const delta = myTime - refTime;
   const sign = delta >= 0 ? '+' : '';
   return `${sign}${delta.toFixed(2)}`;
-}
-
-function sectorValue(sectorNum: number): string | null {
-  const time = props.driver[`S${sectorNum}TIME`] as string;
-  if (!time) return null;
-  const delta = sectorDelta(sectorNum);
-  return delta ?? time;
 }
 
 function isPrevSectorDelta(sectorNum: number): boolean {

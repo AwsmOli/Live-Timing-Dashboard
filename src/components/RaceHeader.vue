@@ -5,24 +5,44 @@ header.bg-surface-1.border-b.border-gray-800.px-4.py-3.flex.items-center.justify
     .hidden(class="sm:block")
       .text-sm.text-gray-400 {{ raceInfo.cup }}
       .text-xs.text-gray-500 {{ raceInfo.heat }} — {{ raceInfo.trackName }}
-  .flex.items-center.gap-3.flex-wrap.justify-end
+  .flex.items-center.gap-2.flex-wrap.justify-end
+    button.text-xs.font-medium.rounded.px-3.py-1.transition-colors.flex.items-center.gap-1(
+      v-if="showStreamControl"
+      :class="activeMedia === 'stream' ? 'bg-racing-blue text-white' : 'bg-surface-2 text-gray-400 hover:text-white'"
+      @click="emit('toggle-media', 'stream')"
+    )
+      MonitorPlay(:size="14")
+      span.hidden(class="sm:inline") Watch Stream
+    button.text-xs.font-medium.rounded.px-3.py-1.transition-colors.flex.items-center.gap-1(
+      :class="activeMedia === 'gps' ? 'bg-racing-blue text-white' : 'bg-surface-2 text-gray-400 hover:text-white'"
+      @click="emit('toggle-media', 'gps')"
+    )
+      Map(:size="14")
+      span.hidden(class="sm:inline") Watch GPS
+    button.text-xs.font-medium.rounded.px-3.py-1.transition-colors.flex.items-center.gap-1(
+      :class="showTicker ? 'bg-racing-blue text-white' : 'bg-surface-2 text-gray-400 hover:text-white'"
+      @click="emit('toggle-ticker')"
+    )
+      Newspaper(:size="14")
+      span.hidden(class="sm:inline") Live Ticker
     //- Elapsed / Remaining time
-    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="elapsedDisplay")
+    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="elapsedDisplay" title="Elapsed race time")
       Clock(:size="12" class="text-gray-500")
       span {{ elapsedDisplay }}
-    .text-xs.font-mono.flex.items-center.gap-1(v-if="remainingDisplay" :class="remainingUrgent ? 'text-racing-red' : 'text-gray-300'")
+    .text-xs.font-mono.flex.items-center.gap-1(v-if="remainingDisplay" :class="remainingUrgent ? 'text-racing-red' : 'text-gray-300'" title="Estimated remaining race time")
       Hourglass(:size="12" class="text-gray-500")
       span {{ remainingDisplay }}
     //- Leader lap
-    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="leaderLaps")
+    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="leaderLaps" title="Leader lap count")
       RotateCw(:size="12" class="text-gray-500")
       span {{ leaderLaps }}
+
     //- Car count
-    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="carCount > 0")
+    .text-xs.font-mono.text-gray-300.flex.items-center.gap-1(v-if="carCount > 0" title="Cars in classification")
       CarIcon(:size="12" class="text-gray-500")
       span {{ carCount }}
     //- Connection status
-    .flex.items-center(class="gap-1.5")
+    .flex.items-center(class="gap-1.5" :title="statusTooltip")
       Wifi(v-if="connectionStatusValue === 'connected'" :size="12" class="text-racing-green")
       RefreshCw(v-else-if="connectionStatusValue === 'reconnecting'" :size="12" class="text-yellow-400 animate-spin")
       WifiOff(v-else :size="12" class="text-racing-red")
@@ -34,12 +54,22 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useLapHistory } from '../composables/useLapHistory';
 import { useRaceState } from '../composables/useRaceState';
 import type { ConnectionStatus } from '../models';
-import { Clock, Hourglass, RotateCw, Car as CarIcon, Wifi, WifiOff, RefreshCw } from 'lucide-vue-next';
+import { Clock, Hourglass, RotateCw, Car as CarIcon, Wifi, WifiOff, RefreshCw, MonitorPlay, Map, Newspaper } from 'lucide-vue-next';
+
+type MediaPanel = 'none' | 'stream' | 'gps';
 
 const RACE_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 const props = defineProps<{
   connectionStatus?: ConnectionStatus;
+  activeMedia: MediaPanel;
+  showTicker: boolean;
+  showStreamControl: boolean;
+}>();
+
+const emit = defineEmits<{
+  'toggle-media': [mode: Exclude<MediaPanel, 'none'>];
+  'toggle-ticker': [];
 }>();
 
 const connectionStatusValue = computed(() => props.connectionStatus ?? 'disconnected');
@@ -131,6 +161,14 @@ const statusLabel = computed(() => {
     case 'connected': return 'Live';
     case 'reconnecting': return 'Reconnecting...';
     default: return 'Disconnected';
+  }
+});
+
+const statusTooltip = computed(() => {
+  switch (connectionStatusValue.value) {
+    case 'connected': return 'Live timing connection is active';
+    case 'reconnecting': return 'Reconnecting to live timing';
+    default: return 'Live timing connection is offline';
   }
 });
 </script>
