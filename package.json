@@ -17,9 +17,12 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "pug": "^3.0.4",
+    "sass-embedded": "^1.99.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.3",
     "vite": "^8.0.8",
+    "vite-plugin-pwa": "^1.2.0",
     "vue-tsc": "^3.2.6"
   }
 }

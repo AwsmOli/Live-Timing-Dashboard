@@ -13,7 +13,7 @@
   .flex-1.flex.min-h-0(class="flex-col lg:flex-row")
     .border-b.border-gray-800(
       v-if="hasMediaPanel"
-      class="h-[50vh] lg:h-auto lg:flex-1 lg:border-b-0 lg:border-r"
+      class="lg:flex-1 lg:border-b-0 lg:border-r"
     )
       LiveStream(v-if="activeMedia === 'stream'")
       GpsStream(v-else-if="activeMedia === 'gps'")
