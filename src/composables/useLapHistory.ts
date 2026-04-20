@@ -13,7 +13,11 @@ const DEFAULT_SECTOR_COUNT = 5;
 const MAX_SECTOR_COUNT = 9;
 
 function getSectorCount(driver: Driver | DriverInternal): number {
-  for (let sectorNumber = MAX_SECTOR_COUNT; sectorNumber >= 1; sectorNumber -= 1) {
+  for (
+    let sectorNumber = MAX_SECTOR_COUNT;
+    sectorNumber >= 1;
+    sectorNumber -= 1
+  ) {
     const key = `S${sectorNumber}TIME`;
     if (key in driver) return sectorNumber;
   }

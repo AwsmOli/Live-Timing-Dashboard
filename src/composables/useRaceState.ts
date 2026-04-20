@@ -14,8 +14,13 @@ function clampSectorCount(count: number | null | undefined): number {
 }
 
 function getSectorCountFromLengths(data: RaceData): number {
-  for (let sectorNumber = MAX_SECTOR_COUNT; sectorNumber >= 1; sectorNumber -= 1) {
-    const lengthValue = Number(data[`S${sectorNumber}L` as keyof RaceData]) || 0;
+  for (
+    let sectorNumber = MAX_SECTOR_COUNT;
+    sectorNumber >= 1;
+    sectorNumber -= 1
+  ) {
+    const lengthValue =
+      Number(data[`S${sectorNumber}L` as keyof RaceData]) || 0;
     if (lengthValue > 0) return sectorNumber;
   }
 
@@ -27,7 +32,10 @@ function deriveSectorCount(data: RaceData): number {
   const trackLengthSectorCount = getSectorCountFromLengths(data);
 
   return clampSectorCount(
-    Math.max(trackLengthSectorCount, intermediateCount > 0 ? intermediateCount + 1 : 0),
+    Math.max(
+      trackLengthSectorCount,
+      intermediateCount > 0 ? intermediateCount + 1 : 0,
+    ),
   );
 }
 
@@ -106,7 +114,9 @@ const sortedDrivers: ComputedRef<DriverInternal[]> = computed(() => {
     const lapDelta = (Number(b.LAPS) || 0) - (Number(a.LAPS) || 0);
     if (lapDelta !== 0) return lapDelta;
 
-    const sectorDelta = getCompletedSectorCount(b, sectorCount) - getCompletedSectorCount(a, sectorCount);
+    const sectorDelta =
+      getCompletedSectorCount(b, sectorCount) -
+      getCompletedSectorCount(a, sectorCount);
     if (sectorDelta !== 0) return sectorDelta;
 
     return Number(a.POSITION) - Number(b.POSITION);
@@ -222,7 +232,10 @@ function updateDrivers(results: Driver[]): void {
           const sectorNumber = index + 1;
           return (existing?.[`S${sectorNumber}TIME`] as string) || "";
         })
-      : Array.from({ length: sectorCount }, (_, index) => existing?._prevSectors?.[index] ?? "");
+      : Array.from(
+          { length: sectorCount },
+          (_, index) => existing?._prevSectors?.[index] ?? "",
+        );
 
     // Real feed updates can change the raw intermediate number twice inside the same sector.
     // Only reset the running sector timer when the displayed sector actually changes.
