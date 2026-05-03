@@ -136,12 +136,12 @@ function getCarName(carNumber: string | null): string | null {
   aspect-ratio: 1;
   opacity: 0.9;
   pointer-events: none;
-  box-shadow: 0 0 24px rgba(41, 121, 255, 0.4);
+  box-shadow: 0 0 24px rgba(41, 121, 255, 0.2);
 
   &__iframe {
     position: absolute;
-    width: 300%;
-    height: 300%;
+    width: 2000px;
+    height: 2000px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
