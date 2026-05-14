@@ -56,6 +56,15 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: () => "/wp-content/themes/pofo-child/liveticker.php",
       },
+      "/api/yt-autoaddiction": {
+        target: "https://www.youtube.com",
+        changeOrigin: true,
+        rewrite: () => "/@AutoAddictionMedia/streams",
+        headers: {
+          Cookie: "CONSENT=YES+1; SOCS=CAESEwgDEgk1ODI1NTkzNTQaAmVuIAEaBgiA7pq7Bg",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      },
     },
   },
 });
