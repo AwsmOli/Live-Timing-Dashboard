@@ -4,8 +4,7 @@ const NLS_EN =
   "https://www.nuerburgring-langstrecken-serie.de/language/en/live/";
 const NLS_DE =
   "https://www.nuerburgring-langstrecken-serie.de/language/de/live/";
-const YT_AUTOADDICTION =
-  "https://www.youtube.com/@AutoAddictionMedia/streams";
+const YT_AUTOADDICTION = "https://www.youtube.com/@AutoAddictionMedia/streams";
 
 function nlsUrl(lang: "en" | "de"): string {
   const origin = lang === "en" ? NLS_EN : NLS_DE;
@@ -63,7 +62,8 @@ function parseLiveStreams(html: string): StreamInfo[] {
     const chunk = html.slice(start, Math.min(end, start + 8000));
 
     // Only include currently-live items (LIVE badge style)
-    if (!chunk.includes('"badgeStyle":"THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE"')) continue;
+    if (!chunk.includes('"badgeStyle":"THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE"'))
+      continue;
 
     seen.add(id);
 

@@ -61,7 +61,8 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: () => "/@AutoAddictionMedia/streams",
         headers: {
-          Cookie: "CONSENT=YES+1; SOCS=CAESEwgDEgk1ODI1NTkzNTQaAmVuIAEaBgiA7pq7Bg",
+          Cookie:
+            "CONSENT=YES+1; SOCS=CAESEwgDEgk1ODI1NTkzNTQaAmVuIAEaBgiA7pq7Bg",
           "Accept-Language": "en-US,en;q=0.9",
         },
       },
