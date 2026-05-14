@@ -14,9 +14,11 @@ function nlsUrl(lang: "en" | "de"): string {
 }
 
 function ytAutoAddictionUrl(): string {
-  return import.meta.env.DEV
-    ? "/api/yt-autoaddiction"
-    : `https://api.allorigins.win/raw?url=${encodeURIComponent(YT_AUTOADDICTION)}`;
+  if (import.meta.env.DEV) return "/api/yt-autoaddiction";
+  // In production, use a dedicated Cloudflare Worker proxy (see yt-proxy-worker.js).
+  // Set VITE_YT_PROXY_URL to your worker URL in GitHub Actions secrets.
+  const workerUrl = import.meta.env.VITE_YT_PROXY_URL as string | undefined;
+  return workerUrl ?? "";
 }
 
 export interface StreamInfo {
@@ -163,9 +165,11 @@ export async function fetchNlsConfig(): Promise<NlsConfig | null> {
       if (!s.carNumber) s.label = "Mainstream GER";
     }
 
-    // Fetch AutoAddiction live streams in parallel with NLS page fetching
-    const ytHtml = await fetchPage(ytAutoAddictionUrl());
-    const aaStreams = ytHtml ? parseLiveStreams(ytHtml) : [];
+    // Hardcoded AutoAddiction streams for ADAC RAVENOL 24H Nürburgring 2026
+    const aaStreams: StreamInfo[] = [
+      { label: "AutoAddiction Q1", carNumber: null, videoId: "koeAY7d1KhI" },
+      { label: "AutoAddiction Q2", carNumber: null, videoId: "6SCttrdBXv0" },
+    ];
 
     // Merge: insert DE main stream right after EN main stream, skip duplicates
     const seenVideoIds = new Set(enStreams.map((s) => s.videoId));
