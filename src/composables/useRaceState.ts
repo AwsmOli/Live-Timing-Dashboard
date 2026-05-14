@@ -111,15 +111,18 @@ const sortedDrivers: ComputedRef<DriverInternal[]> = computed(() => {
   const arr = Array.from(drivers.values());
   const sectorCount = clampSectorCount(raceInfo.sectorCount);
   arr.sort((a, b) => {
+    const posA = Number(a.POSITION) || 9999;
+    const posB = Number(b.POSITION) || 9999;
+    if (posA !== posB) return posA - posB;
+
+    // Tiebreak by laps then sectors when POSITION is equal/missing
     const lapDelta = (Number(b.LAPS) || 0) - (Number(a.LAPS) || 0);
     if (lapDelta !== 0) return lapDelta;
 
-    const sectorDelta =
+    return (
       getCompletedSectorCount(b, sectorCount) -
-      getCompletedSectorCount(a, sectorCount);
-    if (sectorDelta !== 0) return sectorDelta;
-
-    return Number(a.POSITION) - Number(b.POSITION);
+      getCompletedSectorCount(a, sectorCount)
+    );
   });
   return arr;
 });

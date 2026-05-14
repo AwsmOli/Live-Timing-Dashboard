@@ -4,7 +4,8 @@ const NLS_EN =
   "https://www.nuerburgring-langstrecken-serie.de/language/en/live/";
 const NLS_DE =
   "https://www.nuerburgring-langstrecken-serie.de/language/de/live/";
-const YT_AUTOADDICTION = "https://www.youtube.com/@AutoAddictionMedia/streams";
+const YT_AUTOADDICTION =
+  "https://www.youtube.com/@AutoAddictionMedia/streams?gl=US&hl=en";
 
 function nlsUrl(lang: "en" | "de"): string {
   const origin = lang === "en" ? NLS_EN : NLS_DE;
