@@ -4,8 +4,7 @@ const NLS_EN =
   "https://www.nuerburgring-langstrecken-serie.de/language/en/live/";
 const NLS_DE =
   "https://www.nuerburgring-langstrecken-serie.de/language/de/live/";
-const YT_AUTOADDICTION =
-  "https://www.youtube.com/@AutoAddictionMedia/streams?gl=US&hl=en";
+const YT_AUTOADDICTION = "https://www.youtube.com/@AutoAddictionMedia/streams";
 
 function nlsUrl(lang: "en" | "de"): string {
   const origin = lang === "en" ? NLS_EN : NLS_DE;
@@ -17,7 +16,7 @@ function nlsUrl(lang: "en" | "de"): string {
 function ytAutoAddictionUrl(): string {
   return import.meta.env.DEV
     ? "/api/yt-autoaddiction"
-    : `https://corsproxy.io/?url=${encodeURIComponent(YT_AUTOADDICTION)}`;
+    : `https://api.allorigins.win/raw?url=${encodeURIComponent(YT_AUTOADDICTION)}`;
 }
 
 export interface StreamInfo {
@@ -45,35 +44,36 @@ function parseLiveStreams(html: string): StreamInfo[] {
   const streams: StreamInfo[] = [];
   const seen = new Set<string>();
 
-  // Collect all videoId positions in the page
-  const videoIdRe = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
-  const positions: Array<{ id: string; start: number }> = [];
-  let m: RegExpExecArray | null;
-  while ((m = videoIdRe.exec(html)) !== null) {
-    positions.push({ id: m[1], start: m.index });
-  }
+  // Strategy: anchor on the LIVE badge marker, then look backward for the
+  // nearest videoId and accessibility label. The YouTube JSON structure places
+  // the videoId and title *before* the thumbnail overlay badges in each card.
+  const liveMarker = '"badgeStyle":"THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE"';
+  let searchFrom = 0;
 
-  for (let i = 0; i < positions.length; i++) {
-    const { id, start } = positions[i];
+  while (true) {
+    const liveIdx = html.indexOf(liveMarker, searchFrom);
+    if (liveIdx === -1) break;
+    searchFrom = liveIdx + 1;
+
+    // Look backward up to 10000 chars for the nearest videoId JSON field
+    const before = html.slice(Math.max(0, liveIdx - 10000), liveIdx);
+    const vidMatches = [...before.matchAll(/"videoId":"([a-zA-Z0-9_-]{11})"/g)];
+    const lastVid = vidMatches[vidMatches.length - 1];
+    if (!lastVid) continue;
+
+    const id = lastVid[1];
     if (seen.has(id)) continue;
-
-    // Scope the search to just this renderer (up to the next videoId)
-    const end =
-      i + 1 < positions.length ? positions[i + 1].start : start + 8000;
-    const chunk = html.slice(start, Math.min(end, start + 8000));
-
-    // Only include currently-live items (LIVE badge style)
-    if (!chunk.includes('"badgeStyle":"THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE"'))
-      continue;
-
     seen.add(id);
 
-    // Extract title from "runs":[{"text":"..."}] within this chunk
-    const titleM = chunk.match(/"runs":\[{"text":"([^"]+)"/);
+    // Extract title from the last "label":"..." in the same backward window
+    // (YouTube puts the accessibility label string there with the full title)
+    const labelMatches = [...before.matchAll(/"label":"([^"]{10,200})"/g)];
+    const lastLabel = labelMatches[labelMatches.length - 1];
+
     let label: string;
-    if (titleM) {
+    if (lastLabel) {
       // e.g. "🔴 LIVE: Nürburgring 24h Q1 | 🇬🇧 | ADAC RAVENOL 24H NÜRBURGRING 2026"
-      const raw = titleM[1].replace(/^🔴\s*LIVE:\s*/i, "");
+      const raw = lastLabel[1].replace(/^🔴\s*LIVE:\s*/i, "");
       const session = raw.split(" | ")[0].trim(); // "Nürburgring 24h Q1"
       const short = session.replace(/^N[üu]rburgring\s+24h?\s+/i, "").trim();
       label = `AutoAddiction ${short || streams.length + 1}`;
