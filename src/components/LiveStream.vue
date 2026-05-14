@@ -144,7 +144,7 @@ function getCarName(carNumber: string | null): string | null {
     height: 2000px;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-57%, -50%);
   }
 }
 </style>
