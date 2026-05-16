@@ -52,8 +52,8 @@ import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { processLapHistoryUpdate } from './composables/useLapHistory';
 import { useMockData } from './composables/useMockData';
 import { useRaceState } from './composables/useRaceState';
-import { useWebSocket, setEventId } from './composables/useWebSocket';
-import { fetchNlsConfig, useNlsConfig } from './composables/useNlsConfig';
+import { useWebSocket } from './composables/useWebSocket';
+import { useNlsConfig } from './composables/useNlsConfig';
 import type { RaceData } from './models';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import RaceHeader from './components/RaceHeader.vue';
@@ -123,16 +123,7 @@ const dataSource = isMock
   : useWebSocket(handleMessage);
 
 // Mirror the data source's connection status
-onMounted(async () => {
-  // Fetch NLS config to get event ID and streams
-  if (!isMock) {
-    const cfg = await fetchNlsConfig();
-    if (cfg) {
-      setEventId(cfg.eventId);
-      console.log(`NLS config loaded: eventId=${cfg.eventId}, ${cfg.streams.length} streams`);
-    }
-  }
-
+onMounted(() => {
   // Start live ticker polling
   startTickerPolling();
 
